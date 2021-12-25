@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:raffle_ui/constants/home_colors.dart';
+import 'package:raffle_ui/constants/kiss/kiss_colors.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class AppDrawer extends StatefulWidget {
@@ -53,38 +53,55 @@ class _AppDrawerState extends State<AppDrawer> with RouteAware {
         children: [
           Expanded(
             child: Container(
-              padding: EdgeInsets.only(top: 32.0),
-              color: HomeColors.backgroundColor,
+              padding: const EdgeInsets.only(top: 32.0),
+              color: KissColors.cardColor,
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   ListTile(
                     title: Text(
-                        "KISS Gaming", 
+                        "No Loss Gaming", 
                         style: GoogleFonts.montserrat(
                           textStyle: const TextStyle(fontSize: 24.0, color: Colors.white)
                         ),
                       ),
-                    subtitle: Text(
-                        "No Loss Games", 
-                        style: GoogleFonts.roboto(
-                          textStyle: const TextStyle(fontSize: 14.0, color: Colors.white)
+                  ),
+                  ListTile(
+                    title: Row(
+                      children: [
+                        const Icon(FontAwesomeIcons.ticketAlt, color: KissColors.pink),
+                        Column(
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.all(24.0),
+                              child: Text("Raffle", style: GoogleFonts.quicksand(textStyle: TextStyle(color: KissColors.pink, fontWeight: FontWeight.bold), fontSize: 18.0),),
+                            ),
+                          ],
                         ),
-                      ),
+                      ],
+                    ),
+                    onTap: () async {}
                   ),
                   ListTile(
                     title: ElevatedButton(
                       onPressed: () {  },
                       child: Row(
                         children: [
-                          Icon(FontAwesomeIcons.ticketAlt, color: HomeColors.pink),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 24.0),
-                            child: Text("Raffle", style: GoogleFonts.roboto(textStyle: TextStyle(color: HomeColors.pink), fontSize: 18.0),),
+                          Column(
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.all(24.0),
+                                child: Text("KISS", style: GoogleFonts.quicksand(textStyle: TextStyle(color: KissColors.pink, fontWeight: FontWeight.bold), fontSize: 18.0),),
+                              ),
+                            ],
                           ),
                         ],
                       ),
-                      style: ElevatedButton.styleFrom(primary: HomeColors.cardColor)
+                      style: ElevatedButton.styleFrom(primary: Colors.grey[700], 
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8.0),
+                          )
+                      )
                     ),
                     onTap: () async {}
                   ),
@@ -113,8 +130,6 @@ class _AppDrawerState extends State<AppDrawer> with RouteAware {
               ),
             ),
           ),
-          if(widget.permanentlyDisplay)
-            VerticalDivider(color: Colors.grey, width: 1)
         ],
       ),
     );

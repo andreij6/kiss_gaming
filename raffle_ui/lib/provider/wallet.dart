@@ -1,6 +1,10 @@
+import 'dart:convert';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_web3/flutter_web3.dart';
-import 'package:raffle_ui/constants/blockchain.dart';
+import 'package:http/http.dart' as http;
+import 'package:raffle_ui/constants/kiss/blockchain.dart';
+import 'package:raffle_ui/models/coin_quote.dart';
 
 class WalletProvider extends ChangeNotifier {
   static const operatingChain = 56;
@@ -25,7 +29,16 @@ class WalletProvider extends ChangeNotifier {
 
   BigInt yourBalance = BigInt.zero;
 
+  int potPercent = 5;
+  int potWinnerPercent = 0;
+  int treasuryPercent = 0;
+  int minTicketsForDraw = 0;
+  int redeemDelay = 0;
+
   int kissBalance = 0;
+  String tvl = "";
+  String excess = "";
+  String lovePrice = "";
   Iterable<int> ticketIds = [];
 
   Web3Provider? _provider;
@@ -50,6 +63,7 @@ class WalletProvider extends ChangeNotifier {
   }
 
   update() async {
+    
     raffleContract = Contract(Blockchain.kissRaffleTokenAddress, Blockchain.raffleAbi, _provider!.getSigner());
       
     var circulatingSupply = await raffleContract!.call<BigNumber>("circulatingSupply");
@@ -58,10 +72,32 @@ class WalletProvider extends ChangeNotifier {
     var balance = await raffleContract!.call<BigNumber>("balanceOf", [currentAddress]);
     tickets = balance.toInt;
 
+    var winnerShare = await raffleContract!.call<BigNumber>("_winnerShare");
+    potWinnerPercent = ((winnerShare.toInt) / 100) as int;
+
+    var profitShare = await raffleContract!.call<BigNumber>("_profitShare");
+    treasuryPercent = ((profitShare.toInt) / 100) as int;
+
+    var delayInDays = await raffleContract!.call<BigNumber>("_delayInDays");
+    redeemDelay = delayInDays.toInt;
+
+    var minForRaffle = await raffleContract!.call<BigNumber>("minimumForRaffle");
+    minTicketsForDraw = minForRaffle.toInt;
+
+    var loveQuote = await fetchLovePrice();
+
+    lovePrice = loveQuote.quotes.uSD.price.toStringAsFixed(2);
+
+    var rExcess = await raffleContract!.call<BigNumber>("getExcess");
+    excess = ((rExcess.toInt / Blockchain.oneKissToken) * loveQuote.quotes.uSD.price).toStringAsFixed(2);
+
     await isKissEnabled();
 
     var kBalance = await kissToken!.call<BigNumber>("balanceOf", [currentAddress]);
     kissBalance = kBalance.toInt;
+
+    var rkBalance = await kissToken!.call<BigNumber>("balanceOf", [Blockchain.kissRaffleTokenAddress]);
+    tvl = ((rkBalance.toInt / Blockchain.oneKissToken) * loveQuote.quotes.uSD.price).toStringAsFixed(2);
 
     var _ticketIds = await raffleContract!.call<List<dynamic>>("getOwnedTokenIds");
     
@@ -74,6 +110,19 @@ class WalletProvider extends ChangeNotifier {
 
     notifyListeners();
   }
+
+  Future<CoinQuote> fetchLovePrice() async {
+  final response = await http
+      .get(Uri.parse('https://api.coinpaprika.com/v1/tickers/love-hunny-love-token'));
+
+  if (response.statusCode == 200) {
+    return CoinQuote.fromJson(jsonDecode(response.body));
+  } else {
+    throw Exception('Failed to load album');
+  }
+}
+
+
 
   bool canRedeem(int tokenId){
     if(ticketCanRedeem.containsKey(tokenId)){
